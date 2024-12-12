@@ -1,5 +1,3 @@
-from dotenv import load_dotenv
-import os
 from FlagEmbedding import FlagReranker
 import heapq
 from langchain_google_genai import ChatGoogleGenerativeAI
