@@ -74,17 +74,22 @@ def chat():
     data = request.json
     question = data.get('question')
     
+    logger.info(f"Received question: {question}")  # Log the received question
+
     if not question:
+        logger.warning("No question provided in the request")  # Log warning for missing question
         return jsonify({"error": "No question provided"}), 400
 
     try:
+        logger.info("Processing question...")  # Log before processing
         response, extracted_links = qa_chain.run(question)
+        logger.info("Question processed successfully")  # Log successful processing
         return jsonify({
             "response": response,
             "links": extracted_links
         })
     except Exception as e:
-        logger.error(f"Error processing question: {str(e)}")
+        logger.error(f"Error processing question: {str(e)}")  # Log the error
         return jsonify({"error": "Internal server error"}), 500
 
 @app.route('/health', methods=['GET'])
