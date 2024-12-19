@@ -32,7 +32,14 @@ llm_handler = None
 qa_chain = None
 
 def initialize_components():
-    """Initialize components only once when server starts"""
+    """Initialize components only once when server starts.
+    
+    Steps:
+    1. Log the initialization process.
+    2. Initialize the vector database if it is not already initialized.
+    3. Initialize the LLM handler if it is not already initialized.
+    4. Initialize the QA chain if it is not already initialized.
+    """
     global vector_db, llm_handler, qa_chain
     
     logger.info("🔄 Initializing components...")
@@ -71,6 +78,16 @@ initialize_components()
 
 @app.route('/send_message', methods=['POST'])
 def chat():
+    """Handle chat messages from users.
+    
+    Steps:
+    1. Get the JSON data from the request.
+    2. Extract the question from the data.
+    3. Log the received question.
+    4. Check if the question is provided; if not, log a warning and return an error response.
+    5. Process the question using the QA chain and log the processing status.
+    6. Return the response and extracted links in JSON format.
+    """
     data = request.json
     question = data.get('question')
     
@@ -94,6 +111,11 @@ def chat():
 
 @app.route('/health', methods=['GET'])
 def health_check():
+    """Check the health of the application.
+    
+    Steps:
+    1. Return a JSON response indicating the status of the application.
+    """
     return jsonify({"status": "healthy"}), 200
 
 if __name__ == '__main__':

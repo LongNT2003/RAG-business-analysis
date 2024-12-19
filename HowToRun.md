@@ -26,4 +26,4 @@ With the virtual environment activated:
 
 ## 1.2 Run Frontend
 - `cd deploy/frontend`
-- `npm run dev`
+-- Bật Go Live HTML lên là oke
