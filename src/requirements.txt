@@ -1,0 +1,11 @@
+# Start of Selection
+
+streamlit
+python-dotenv
+langchain
+langchain-community
+langchain-core
+langchain-google-genai
+sentence-transformers
+qdrant-client
+FlagEmbedding
