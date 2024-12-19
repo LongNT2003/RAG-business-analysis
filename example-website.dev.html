@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Test Page</title>
+</head>
+<body>
+    <h1>Test Page</h1>
+    <p>The chatbot should appear in the bottom-right corner.</p>
+
+    <!-- <script src="http://localhost:25040/embed.js"></script> -->
+    <script src="http://localhost:5000/embed.js" type="module"></script>
+    <!-- <script src="http://103.253.20.13:25040/embed.js" type="module"></script> -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            initChatbot({
+                position: 'right',
+                width: '400px',
+                height: '600px'
+            });
+        });
+    </script>
+</body>
+</html> 
