@@ -2,6 +2,13 @@ from flask import Flask, request, jsonify  # Import Flask
 from rag_pipeline.back import LLMHandler, VectorDatabase, QuestionAnsweringChain
 from dotenv import load_dotenv
 import os
+from flask import Flask, request, jsonify
+import sys
+import logging
+from flask import Flask, request, jsonify, Response
+from flask_cors import CORS
+import sys
+import logging
 
 # Set console output encoding to UTF-8
 sys.stdout.reconfigure(encoding='utf-8')
@@ -67,4 +74,4 @@ def chat():
 
 if __name__ == '__main__':
     logger.info("🚀 Starting Flask application...")
-    app.run(host='0.0.0.0', port=3001, debug=True)
+    app.run(host='0.0.0.0', port=3000, debug=True)
