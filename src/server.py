@@ -3,8 +3,26 @@ from rag_pipeline.back import LLMHandler, VectorDatabase, QuestionAnsweringChain
 from dotenv import load_dotenv
 import os
 
-# Initialize Flask app
+# Set console output encoding to UTF-8
+sys.stdout.reconfigure(encoding='utf-8')
+
+# Set up detailed logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logger = logging.getLogger(__name__)
+
 app = Flask(__name__)
+CORS(app, resources={
+    r"/*": {
+        "origins": "*",
+        "allow_headers": ["Content-Type"],
+        "expose_headers": ["Content-Type"],
+        "methods": ["GET", "POST", "OPTIONS"]
+    }
+})
 
 # Parameters
 load_dotenv()
@@ -46,7 +64,7 @@ def chat():
         "links": extracted_links
     })
 
+
 if __name__ == '__main__':
-    app.run(debug=True)  # Run the Flask app
-
-
+    logger.info("🚀 Starting Flask application...")
+    app.run(host='0.0.0.0', port=3001, debug=True)
