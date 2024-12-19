@@ -39,23 +39,35 @@ rerank = True
 rewrite = True
 num_docs = 5
 
-# Initialize components
-vector_db = VectorDatabase(
-    model_name="hiieu/halong_embedding",
-    collection_name='cmc_final_db',
-    api=qdrant_key
-)
-llm_handler = LLMHandler(model_name="gemini-1.5-flash", gemini_key=gemini_key)
-qa_chain = QuestionAnsweringChain(
-    llm_handler=llm_handler,
-    vector_db=vector_db,
-    num_docs=num_docs,
-    apply_rerank=rerank,
-    apply_rewrite=rewrite,
-    date_impact=0.001
-)
+# Global variables
+vector_db = None
+llm_handler = None
+qa_chain = None
 
-@app.route('/chat', methods=['POST'])  # Define the chat endpoint
+def initialize_components():
+    global vector_db, llm_handler, qa_chain
+    if vector_db is None:
+        vector_db = VectorDatabase(
+            model_name="hiieu/halong_embedding",
+            collection_name='cmc_final_db',
+            api=qdrant_key
+        )
+    if llm_handler is None:
+        llm_handler = LLMHandler(model_name="gemini-1.5-flash", gemini_key=gemini_key)
+    if qa_chain is None:
+        qa_chain = QuestionAnsweringChain(
+            llm_handler=llm_handler,
+            vector_db=vector_db,
+            num_docs=num_docs,
+            apply_rerank=rerank,
+            apply_rewrite=rewrite,
+            date_impact=0.001
+        )
+
+# Initialize once when starting
+initialize_components()
+
+@app.route('/chat', methods=['POST'])
 def chat():
     data = request.json
     question = data.get('question')
@@ -63,14 +75,12 @@ def chat():
     if not question:
         return jsonify({"error": "No question provided"}), 400
 
-    # Get AI response
+    # Use global qa_chain
     response, extracted_links = qa_chain.run(question)
-
     return jsonify({
         "response": response,
         "links": extracted_links
     })
-
 
 if __name__ == '__main__':
     logger.info("🚀 Starting Flask application...")
