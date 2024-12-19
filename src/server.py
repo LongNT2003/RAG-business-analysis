@@ -1,5 +1,5 @@
 import streamlit as st
-from src.rag_pipeline.back import LLMHandler, VectorDatabase, QuestionAnsweringChain
+from rag_pipeline.back import LLMHandler, VectorDatabase, QuestionAnsweringChain
 from dotenv import load_dotenv
 import os
 
@@ -10,9 +10,6 @@ qdrant_key=os.getenv('qdrant_key')
 rerank=True
 rewrite=True
 num_docs=5
-
-
-
 
 
 if 'vector_db' not in st.session_state:
