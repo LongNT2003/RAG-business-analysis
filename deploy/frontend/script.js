@@ -25,6 +25,7 @@ async function sendMessage(message) {
 
     try {
         const response = await fetch(`${BACKEND_URL}/send_message`, {
+        const response = await fetch(`http://localhost:3000/send_message`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -33,9 +34,7 @@ async function sendMessage(message) {
             credentials: 'include',
             mode: 'cors',
             body: JSON.stringify({
-                user_id: 'abc-123',
-                message: message,
-                conversation_id: conversationId
+                question: message
             })
         });
 

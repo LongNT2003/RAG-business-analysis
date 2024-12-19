@@ -3,24 +3,25 @@ To test your new chatbot API using `curl`, you can send a POST request to the `/
 ### Example `curl` Command
 
 ```bash
-curl -X POST http://127.0.0.1:5000/chat \
--H "Content-Type: application/json" \
--d '{"question": "What is the capital of France?"}'
+curl --location 'http://localhost:3000/send_message' \
+--header 'Content-Type: application/json' \
+--data '{"question": "What is the capital of France?"}'
 ```
 
-### Explanation of the Command
-- `-X POST`: Specifies that you are making a POST request.
-- `http://127.0.0.1:5000/chat`: The URL of your API endpoint.
-- `-H "Content-Type: application/json"`: Sets the header to indicate that you are sending JSON data.
-- `-d '{"question": "What is the capital of France?"}'`: The data you are sending in JSON format. Replace the question with whatever you want to ask the chatbot.
+
 
 ### Expected Response
 If everything is set up correctly, you should receive a JSON response similar to this:
 
 ```json
 {
-    "response": "The capital of France is Paris.",
-    "links": []
+    "links": [
+        "https://cmctelecom.vn/bai-viet/dich-vu-sao-luu-va-bao-ve-du-lieu-cua-aws-ra-mat-tinh-nang-moi/",
+        "https://www.cmc.com.vn/insight-detail/tap-doan-cmc-tang-400-may-tinh-tri-gia-4-ty-dong-cho-hoc-sinh-kho-khan-tai-ha-noi-202111206393.html",
+        "https://cmctelecom.vn/bai-viet/top-list-5-nha-cung-cap-dich-vu-dien-toan-dam-may-hang-dau-viet-nam/",
+        "https://cmc-u.edu.vn/chi-tiet-cach-thuc-thanh-toan-truc-tuyen-le-phi-dang-ky-xet-tuyen-dai-hoc-nam-2023-theo-huong-dan-cua-bo-gddt/"
+    ],
+    "response": "Paris is the capital city of France.\n"
 }
 ```
 
