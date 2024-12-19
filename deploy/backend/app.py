@@ -1,136 +1,93 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import requests
-import json
-import uuid
+from rag_pipeline.back import LLMHandler, VectorDatabase, QuestionAnsweringChain
+from dotenv import load_dotenv
+import os
+import logging
+import sys
 
+# Set console output encoding to UTF-8 để khi docker compose nó log ra được port 3000
+sys.stdout.reconfigure(encoding='utf-8')
+
+# Set up detailed logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logger = logging.getLogger(__name__)
+
+# Initialize Flask app
 app = Flask(__name__)
+CORS(app)
 
-# Updated CORS configuration
-CORS(app, resources={
-    r"/*": {
-        "origins": ["http://localhost:25040", "http://103.253.20.13:25040"],
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization", "Accept"],
-        "supports_credentials": True,
-        "max_age": 600
-    }
-})
+# Load environment variables once
+load_dotenv()
+gemini_key = os.getenv('gemini_key')
+qdrant_key = os.getenv('qdrant_key')
 
-@app.after_request
-def after_request(response):
-    origin = request.headers.get('Origin')
-    if origin in ["http://localhost:25040", "http://103.253.20.13:25040"]:
-        response.headers['Access-Control-Allow-Origin'] = origin
-        response.headers['Access-Control-Allow-Credentials'] = 'true'
-        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Accept'
-        
-        if request.method == 'OPTIONS':
-            response.headers['Access-Control-Max-Age'] = '600'
-            return response
+# Global variables for components
+vector_db = None
+llm_handler = None
+qa_chain = None
 
-    return response
-
-# Add a health check endpoint
-@app.route('/health', methods=['GET'])
-def health_check():
-    return jsonify({"status": "healthy"}), 200
-
-class ChatMemory:
-    def __init__(self):
-        self.conversations = {}
-
-    def add_message(self, user_id, message, conversation_id):
-        """
-        Add message to conversation history.
-        """
-        if conversation_id not in self.conversations:
-            self.conversations[conversation_id] = []
-        self.conversations[conversation_id].append(message)
-
-    def get_history(self, conversation_id):
-        """
-        Get conversation history by conversation_id.
-        """
-        return self.conversations.get(conversation_id, [])
-
-    def send_message(self, user_id, message, conversation_id=None):
-        """
-        Send message to API and maintain conversation history.
-        - First chat: send empty conversation_id="" to Bavaan API
-        - Next chats: send existing conversation_id to maintain context
-        """
-        # Lượt chat đầu: conversation_id là None hoặc rỗng
-        if not conversation_id:
-            api_conversation_id = ""  # Gửi rỗng cho API Bavaan
-        else:
-            # Lượt chat tiếp theo: validate conversation_id đã có
-            try:
-                uuid.UUID(conversation_id)
-                api_conversation_id = conversation_id
-            except ValueError:
-                raise ValueError("Invalid conversation_id format. Must be a valid UUID.")
-
-        # Lưu message vào history
-        self.add_message(user_id, message, conversation_id or "temp")
-        history = self.get_history(conversation_id or "temp")
-
-        response = requests.post(
-            'http://103.253.20.13:5011/v1/chat-messages',
-            headers={
-                'Authorization': 'Bearer app-QWcdTAQSAERdfwZSKXXG3I0q',
-                'Content-Type': 'application/json'
-            },
-            data=json.dumps({
-                "inputs": {
-                    "context": " "
-                },
-                "query": message,
-                "response_mode": "blocking",               
-                "conversation_id": api_conversation_id,  # Gửi "" cho lượt đầu
-                "user": user_id
-            })
+def initialize_components():
+    """Initialize components only once when server starts"""
+    global vector_db, llm_handler, qa_chain
+    
+    logger.info("🔄 Initializing components...")
+    
+    # Initialize vector database
+    if vector_db is None:
+        vector_db = VectorDatabase(
+            model_name="hiieu/halong_embedding",
+            collection_name='cmc_final_db',
+            api=qdrant_key
         )
-        
-        response_data = response.json()
-        
-        # Nếu là lượt chat đầu, cập nhật conversation_id từ response
-        if not conversation_id:
-            new_conversation_id = response_data.get("conversation_id")
-            # Cập nhật history với conversation_id mới
-            if "temp" in self.conversations:
-                self.conversations[new_conversation_id] = self.conversations.pop("temp")
-            print(f"New conversation_id: {new_conversation_id}")
-            print(response_data)
-            return {
-                "conversation_id": new_conversation_id,
-                "response": response_data
-            }
-        print(f"Conversation_id: {conversation_id}")
-        print(response_data)
-        return {
-            "conversation_id": conversation_id,
-            "response": response_data
-        }
+        logger.info("✅ Vector database initialized")
+    
+    # Initialize LLM handler
+    if llm_handler is None:
+        llm_handler = LLMHandler(
+            model_name="gemini-1.5-flash", 
+            gemini_key=gemini_key
+        )
+        logger.info("✅ LLM handler initialized")
+    
+    # Initialize QA chain
+    if qa_chain is None:
+        qa_chain = QuestionAnsweringChain(
+            llm_handler=llm_handler,
+            vector_db=vector_db,
+            num_docs=5,
+            apply_rerank=True,
+            apply_rewrite=True,
+            date_impact=0.001
+        )
+        logger.info("✅ QA chain initialized")
 
-# Create ChatMemory instance
-chat_memory = ChatMemory()
+# Initialize components when module loads
+initialize_components()
 
-@app.route('/send_message', methods=['POST'])
-def handle_message():
+@app.route('/chat', methods=['POST'])
+def chat():
+    data = request.json
+    question = data.get('question')
+    
+    if not question:
+        return jsonify({"error": "No question provided"}), 400
+
     try:
-        data = request.json
-        user_id = data.get('user_id')
-        message = data.get('message')
-        conversation_id = data.get('conversation_id')
-        
-        response = chat_memory.send_message(user_id, message, conversation_id)
-        return jsonify(response)
-    except ValueError as e:
-        return jsonify({"code": "invalid_param", "message": str(e), "params": "conversation_id"}), 400
+        response, extracted_links = qa_chain.run(question)
+        return jsonify({
+            "response": response,
+            "links": extracted_links
+        })
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Error processing question: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=3001)
+    logger.info("🚀 Starting Flask application...")
+    # Set debug=False to prevent reloading
+    app.run(host='0.0.0.0', port=3000, debug=False)

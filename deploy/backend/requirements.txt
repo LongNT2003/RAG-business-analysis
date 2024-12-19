@@ -1,3 +1,22 @@
-flask
-flask-cors
-requests
+# Core dependencies
+langchain>=0.1.12
+langchain-core>=0.1.31
+langchain-community>=0.0.25
+# Vector store
+qdrant-client>=1.7.3
+# Embeddings
+sentence-transformers>=2.5.1
+# LLM
+langchain-google-genai>=0.0.11
+google-generativeai>=0.3.2
+# Web framework
+streamlit>=1.32.2
+# Environment variables
+python-dotenv>=1.0.1
+# Reranking
+FlagEmbedding>=1.2.3
+# Optional but recommended
+typing-extensions>=4.10.0
+pydantic>=2.6.4
+Flask>=2.3.2
+flask_cors>=3.0.10
