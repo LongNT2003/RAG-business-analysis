@@ -1,0 +1,12 @@
+{
+    "name": "chatbot",
+    "version": "1.0.0",
+    "description": "Chatbot UI",
+    "main": "index.js",
+    "scripts": {
+      "start": "http-server . -p 5000 --cors -c-1"
+    },
+    "dependencies": {
+      "http-server": "^0.12.3"
+    }
+  }

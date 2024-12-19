@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot UI</title>
+    <link rel="stylesheet" href="style.css">
+    <meta http-equiv="Content-Security-Policy" content="frame-ancestors *">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <img src="ic_ai.png" alt="AI Icon" class="header-icon">
+            <h2 class="header-title">Jira Assistant</h2>
+            <button id="close-chatbot" class="close-btn">
+                <img src="ic_close.png" alt="Close" class="close-icon">
+            </button>
+        </div>
+        <div class="chat-window" id="chat-window">
+            <!-- Tin nhắn sẽ hiển thị tại đây -->
+        </div>
+        <div class="input-container">
+            <div class="input-box">
+                <textarea id="user-input" placeholder="Type a message..."></textarea>
+                <button id="send-button" class="send-button">
+                    <img src="ic_send.png" alt="Send">
+                </button>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="script.js"></script>
+</body>
+</html>

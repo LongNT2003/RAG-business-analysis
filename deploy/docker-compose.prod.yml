@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "25039:3001"
+    environment:
+      - FLASK_ENV=production
+      - API_URL=http://103.253.20.13:5011
+      - ALLOWED_ORIGINS=http://103.253.20.13:25040,http://103.253.20.13:5011
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "25040:5000"
+    environment:
+      - NODE_ENV=production
+      - BACKEND_URL=http://103.253.20.13:25039
+    depends_on:
+      - backend
+    restart: always
+
+networks:
+  app-network:
+    driver: bridge
