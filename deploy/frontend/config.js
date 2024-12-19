@@ -1,13 +1,13 @@
 const config = {
     development: {
-        frontendUrl: 'http://localhost:25040',
-        backendUrl: 'http://localhost:25039',
+        frontendUrl: 'http://localhost:5000',
+        backendUrl: 'http://localhost:3000',
         apiUrl: 'http://localhost:5011',
         liveDevelopment: 'http://127.0.0.1:5502/frontend'
     },
     production: {
-        frontendUrl: 'http://103.253.20.13:25040',
-        backendUrl: 'http://103.253.20.13:25039',
+        frontendUrl: 'http://103.253.20.13:5000',
+        backendUrl: 'http://103.253.20.13:3000',
         apiUrl: 'http://103.253.20.13:5011'
     }
 };

@@ -69,7 +69,7 @@ def initialize_components():
 # Initialize components when module loads
 initialize_components()
 
-@app.route('/chat', methods=['POST'])
+@app.route('/send_message', methods=['POST'])
 def chat():
     data = request.json
     question = data.get('question')
@@ -86,6 +86,10 @@ def chat():
     except Exception as e:
         logger.error(f"Error processing question: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "healthy"}), 200
 
 if __name__ == '__main__':
     logger.info("🚀 Starting Flask application...")

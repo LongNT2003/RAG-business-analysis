@@ -20,34 +20,25 @@ function displayMessage(text, sender) {
 
 async function sendMessage(message) {
     if (!message) return;
-
     displayMessage(message, 'user');
 
     try {
-        const response = await fetch(`${BACKEND_URL}/send_message`, {
+        // const response = await fetch(`${BACKEND_URL}/send_message`, {
         const response = await fetch(`http://localhost:3000/send_message`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Content-Type': 'application/json'
             },
-            credentials: 'include',
-            mode: 'cors',
             body: JSON.stringify({
                 question: message
             })
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
         const data = await response.json();
-        conversationId = data.conversation_id;
-        displayMessage(data.response.answer, 'bot');
+        displayMessage(data.response, 'bot');
     } catch (error) {
-        console.error('Error sending message:', error);
-        displayMessage('Sorry, there was an error processing your message.', 'bot');
+        console.error('Error:', error);
+        displayMessage('Xin lỗi, có lỗi xảy ra', 'bot');
     }
 }
 
