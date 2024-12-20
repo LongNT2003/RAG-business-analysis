@@ -42,7 +42,7 @@ async function sendMessage(message) {
     }
 }
 
-// Xử lý tin nhắn từ parent window
+
 // Xử lý tin nhắn từ parent window
 window.addEventListener('message', (event) => {
     if (event.data?.type === 'showChatbot') {

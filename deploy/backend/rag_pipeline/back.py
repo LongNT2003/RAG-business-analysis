@@ -1,17 +1,14 @@
-from dotenv import load_dotenv
-import os
 from FlagEmbedding import FlagReranker
 import heapq
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import Qdrant
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_qdrant import QdrantVectorStore
 from langchain_core.runnables import RunnableLambda
 from langchain_core.documents import Document
 from datetime import datetime
-from qdrant_client import QdrantClient
 
 def get_months_since_reference(date_str, reference_date="2024-11"):
     """
@@ -71,50 +68,20 @@ class LLMHandler:
 
 class VectorDatabase:
     def __init__(self, model_name: str, collection_name: str, api: str):
-        """
-        Khởi tạo VectorDatabase với tên mô hình, tên bộ sưu tập và khóa API.
-        
-        Tham số:
-        model_name (str): Tên mô hình cho embeddings.
-        collection_name (str): Tên bộ sưu tập trong cơ sở dữ liệu.
-        api (str): Khóa API cho Qdrant.
-        """
         self.embeddings = HuggingFaceEmbeddings(model_name=model_name)
         self.collection_name = collection_name
         self.api = api
         self.db = self.load_db()
         
     def load_db(self):
-        """
-        Tải cơ sở dữ liệu từ Qdrant.
-        
-        Trả về:
-        Qdrant: Đối tượng Qdrant đã khởi tạo.
-        """
-        client = QdrantClient(
+        return QdrantVectorStore.from_existing_collection(
+            embedding=self.embeddings,
+            collection_name=self.collection_name,
             url="https://5d9673e8-d966-4738-adbb-95a5842604ba.europe-west3-0.gcp.cloud.qdrant.io",
             api_key=self.api
         )
-        
-        return Qdrant(
-            client=client,
-            collection_name=self.collection_name,
-            embeddings=self.embeddings
-        )
-
-    def get_retriever(self, search_kwargs=None):
-        """
-        Trả về đối tượng retriever từ cơ sở dữ liệu.
-        
-        Tham số:
-        search_kwargs (dict): Tham số tìm kiếm, mặc định là None.
-        
-        Trả về:
-        Retriever: Đối tượng retriever.
-        """
-        if search_kwargs is None:
-            search_kwargs = {}
-        return self.db.as_retriever(search_kwargs=search_kwargs)
+    def get_retriever(self):
+        return self.db
 
 class QuestionAnsweringChain:
     def __init__(self, llm_handler: LLMHandler, vector_db: VectorDatabase, num_docs: int = 5, 
@@ -132,24 +99,18 @@ class QuestionAnsweringChain:
         """
         self.num_docs = num_docs
         self.llm = llm_handler.get_llm()
-        self.vector_db = vector_db
-        
-        if apply_rerank:
-            search_kwargs = {"k": int(num_docs * 2.5)}
-        else:
-            search_kwargs = {"k": num_docs}
-            
-        self.retriever = vector_db.get_retriever(search_kwargs=search_kwargs)
-        
-        self.extracted_links = []
+        self.db = vector_db.get_retriever()
+        self.extracted_links=[]
         self.memory = []
-        self.date_impact = date_impact
+        self.date_impact=date_impact
+        if apply_rerank:
+            self.retriever = self.db.as_retriever(search_kwargs={"k": int(num_docs * 2.5)})
+        else:
+            self.retriever = self.db.as_retriever(search_kwargs={"k": num_docs})
         self.output_parser = StrOutputParser()
         self.prompt_template = ChatPromptTemplate.from_template(
             """
-            Bạn là chatbot thông minh. Dựa vào những thông tin dưới đây để trả lời chi tiết câu hỏi, 
-            nếu không có dữ liệu liên quan đến câu hỏi, hãy trả lời 'Chúng tôi không có thông tin', 
-            ngoài ra có thể có 1 số câu hỏi không cần thông tin dưới, hãy trả lời tự nhiên:
+            Bạn là chatbot thông minh. Dựa vào những thông tin dưới đây để trả lời chi tiết câu hỏi, nếu không có dữ liệu liên quan đến câu hỏi, hãy trả lời 'Chúng tôi không có thông tin', ngoài ra có thể có 1 số câu hỏi không cần thôn tin dưới, hãy trả lời tự nhiên:
             {context}
 
             Lịch sử hội thoại:
@@ -159,6 +120,7 @@ class QuestionAnsweringChain:
             """
         )
         self.reranker = FlagReranker('namdp-ptit/ViRanker', use_fp16=True)
+
         self.chain = self.create_chain(apply_rewrite=apply_rewrite, apply_rerank=apply_rerank)
 
     def ReRank(self, query_docs):
@@ -181,13 +143,13 @@ class QuestionAnsweringChain:
         chunk_with_rank = [(chunks[idx], scores[idx]) for idx in range(len(chunks))]
         adjusted_docs = []
         for doc, score in chunk_with_rank:
-            date_str = doc.metadata.get("date", "2024-11")
+            date_str = doc.metadata.get("date", "2024-12")
             adjusted_score = apply_date_penalty(score, date_str, self.date_impact)
             adjusted_docs.append((doc, adjusted_score))
         top_chunks = heapq.nlargest(top_k, adjusted_docs, key=lambda x: x[1])
         return [chunk for chunk, score in top_chunks]
 
-    def find_neighbor(self, docs):
+    def find_neighbor(self, docs : list[Document]):
         """
         Tìm các tài liệu lân cận dựa trên ID của tài liệu.
         
@@ -198,24 +160,22 @@ class QuestionAnsweringChain:
         list: Danh sách các tài liệu đã xử lý.
         """
         processed_docs = []
-        for doc in docs:
-            doc_id = doc.metadata.get('_id', 0)
-            neighbor_ids = [doc_id - 2, doc_id - 1, doc_id, doc_id + 1, doc_id + 2]
+        for doc in docs:    
             try:
-                neighbors = [self.vector_db.db.get(id) for id in neighbor_ids if id >= 0]
-                neighbors = [n for n in neighbors if n is not None]
+                doc_id = doc.metadata['_id']
+                neighbor_ids = [doc_id - 2, doc_id - 1,doc_id, doc_id + 1, doc_id + 2]
+                neighbors = self.db.get_by_ids(neighbor_ids)
                 if neighbors:
                     neighbors.append(doc)
-                    neighbors_sorted = sorted(neighbors, key=lambda x: x.metadata.get('_id', 0))
-                    combined_content = ' '.join([n.page_content for n in neighbors_sorted])
-                    doc.page_content = combined_content
+                    neighbors_sorted = sorted(neighbors, key=lambda x: x.metadata['_id'])
+                    doc.page_content = '.'.join([neighbor.page_content for neighbor in neighbors_sorted])
                 processed_docs.append(doc)
             except Exception as e:
                 print(f"Error processing neighbors for doc {doc_id}: {e}")
                 processed_docs.append(doc)
         return processed_docs
 
-    def format_docs(self, docs):
+    def format_docs(self, docs : list[Document]):
         """
         Định dạng các tài liệu thành chuỗi và lưu các liên kết.
         
@@ -247,8 +207,7 @@ class QuestionAnsweringChain:
 
         Câu hỏi gốc: "{query}"
 
-        Câu hỏi viết lại:
-        '''
+        Câu hỏi'''
         rewrite_query = self.llm.invoke(template)
         print(rewrite_query.content)
         return rewrite_query.content

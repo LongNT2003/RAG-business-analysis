@@ -76,6 +76,15 @@ def initialize_components():
 # Initialize components when module loads
 initialize_components()
 
+@app.route('/')
+def home():
+    return jsonify({"message": "Welcome to the RAG Business Analysis API!"})
+
+@app.route('/favicon.ico')
+def favicon():
+    return '', 204
+
+
 @app.route('/send_message', methods=['POST'])
 def chat():
     """Handle chat messages from users.
