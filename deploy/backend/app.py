@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from rag_pipeline.back import LLMHandler, VectorDatabase, QuestionAnsweringChain
 from rag_pipeline.seed_data import read_document_json, SemanticChunking, VectorDBHandler, list_collections
+from crawling.crawl import crawl
 from dotenv import load_dotenv
 import os
 import logging
@@ -78,12 +79,57 @@ def initialize_components():
         )
         logger.info("✅ QA chain initialized")
 
+def switch_collection(collection_name):
+    global vector_db, llm_handler, qa_chain
+    vector_db = VectorDatabase(
+        model_name="hiieu/halong_embedding",
+        collection_name=collection_name,
+        api=qdrant_key,
+        url=url
+    )
+    logger.info(f"✅ Vector database initialized with collection: {collection_name}")
+    qa_chain = QuestionAnsweringChain(
+        llm_handler=llm_handler,
+        vector_db=vector_db,
+        num_docs=5,
+        apply_rerank=True,
+        apply_rewrite=True,
+        date_impact=0.001
+    )
+    logger.info(f"✅ QA chain initialized with collection: {collection_name}")
 # Initialize components when module loads
 initialize_components()
 
 @app.route('/')
 def home():
     return jsonify({"message": "Welcome to the RAG Business Analysis API!"})
+
+@app.route('/crawl', methods=['POST'])
+def crawl_from():
+    print('hello')
+    try:
+        # Parse the request JSON for the URL and company name
+        data = request.get_json()
+        if not data or 'url' not in data or 'company_name' not in data:
+            return jsonify({"error": "URL and company name are required"}), 400
+
+        url = data['url']
+        company_name = data['company_name']
+        
+        # Log the request for debugging purposes
+        logger.info(f"Crawling from URL: {url} for company: {company_name}")
+
+        # Call the crawl function (assuming it is defined and returns text)
+        text = crawl(url, company_name)  # Implement your `crawl` function as needed
+
+        # Return the output text
+        return jsonify({"output": text}), 200
+
+    except Exception as e:
+        # Log and return error if something goes wrong
+        logger.error(f"Error during crawl: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route('/save_db', methods=['POST'])
 def save_db():
@@ -114,6 +160,26 @@ def get_collections():
     logger.info('get available collections!')
     collections=list_collections(url=url,api_key=qdrant_key)
     return jsonify({'collections': collections}), 200
+
+
+@app.route('/change_collection', methods=['POST'])
+def change_collection():
+    try:
+        # Parse the request JSON for the collection name
+        data = request.get_json()
+        if not data or 'collection_name' not in data:
+            return jsonify({"error": "Collection name is required"}), 400
+
+        collection_name = data['collection_name']
+        logger.info(f"Changing active collection to: {collection_name}")
+
+        switch_collection(collection_name)
+        return jsonify({"message": f"Active collection changed to {collection_name}"}), 200
+
+    except Exception as e:
+        logger.error(f"Error changing collection: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route('/send_message', methods=['POST'])
 def chat():
@@ -147,6 +213,9 @@ def chat():
     except Exception as e:
         logger.error(f"Error processing question: {str(e)}")  # Log the error
         return jsonify({"error": "Internal server error"}), 500
+
+
+
 
 @app.route('/health', methods=['GET'])
 def health_check():

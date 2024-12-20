@@ -12,7 +12,7 @@
 
         <!-- Data Processing Container -->
         <div class="data-processing-container">
-            <h3>Data Processing</h3>
+            <h3>Crawling</h3>
             <div class="input-section">
                 <input type="text" id="link-input" placeholder="Enter link">
                 <input type="text" id="company-name-input" placeholder="Enter company name">
@@ -56,27 +56,19 @@
     </div>
     <script type="module" src="script.js"></script>
     <script>
-            // Fetch collections and populate dropdown
-    // document.getElementById('show-collections-button').addEventListener('click', () => {
-    //     const collections = ['Collection 1', 'Collection 2', 'Collection 3']; // Example collections
-    //     console.log(collections);
-    //     const dropdown = document.getElementById('collection-dropdown');
-    //     dropdown.innerHTML = collections.map(col => `<option>${col}</option>`).join('');
-    // });
-
     // Extract content from link
-    document.getElementById('extract-content-button').addEventListener('click', async () => {
-        const link = document.getElementById('link-input').value;
-        const companyName = document.getElementById('company-name-input').value;
+    // document.getElementById('extract-content-button').addEventListener('click', async () => {
+    //     const link = document.getElementById('link-input').value;
+    //     const companyName = document.getElementById('company-name-input').value;
 
-        if (!link || !companyName) {
-            alert('Please fill in both fields');
-            return;
-        }
+    //     if (!link || !companyName) {
+    //         alert('Please fill in both fields');
+    //         return;
+    //     }
 
-        // Simulate content extraction
-        document.getElementById('content-info').innerText = `Extracted content from ${link} for company: ${companyName}`;
-    });
+    //     // Simulate content extraction
+    //     document.getElementById('content-info').innerText = `Extracted content from ${link} for company: ${companyName}`;
+    // });
 
     // Save content to database
     document.getElementById('save-to-database-button').addEventListener('click', () => {

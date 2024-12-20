@@ -94,6 +94,37 @@ document.getElementById('close-chatbot').addEventListener('click', () => {
     window.parent.postMessage({ type: 'closeChatbot' }, '*');
 });
 
+async function changeCollection(collectionName) {
+    try {
+        const response = await fetch('http://localhost:3000/change_collection', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ collection_name: collectionName })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to change collection');
+        }
+
+        console.log('Collection changed successfully:', data.message);
+        alert(`Collection changed to: ${collectionName}`);
+    } catch (error) {
+        console.error('Error changing collection:', error);
+        alert('Error changing collection. Please try again.');
+    }
+}
+
+document.getElementById('collection-dropdown').addEventListener('change', (event) => {
+    const selectedCollection = event.target.value;
+    if (selectedCollection) {
+        changeCollection(selectedCollection);
+    }
+});
+
+// Ensure you fetch and populate the dropdown when the button is clicked
 async function getCollections() {
     try {
         const response = await fetch('http://localhost:3000/get_collections', {
@@ -110,11 +141,52 @@ async function getCollections() {
         const collections = await response.json();
         console.log('Available Collections:', collections['collections']);
         const dropdown = document.getElementById('collection-dropdown');
-        dropdown.innerHTML = collections['collections'].map(col => `<option>${col}</option>`).join('');
+        dropdown.innerHTML = collections['collections']
+            .map(col => `<option value="${col}">${col}</option>`)
+            .join('');
     } catch (error) {
         console.error('Error fetching collections:', error);
     }
 }
+
 document.getElementById('show-collections-button').addEventListener('click', () => {
     getCollections();
+});
+
+document.getElementById('extract-content-button').addEventListener('click', async () => {
+    // Get input values
+    const linkInput = document.getElementById('link-input').value.trim();
+    const companyNameInput = document.getElementById('company-name-input').value.trim();
+
+    // Validate inputs
+    if (!linkInput || !companyNameInput) {
+        alert('Please enter both the link and the company name.');
+        return;
+    }
+    try {
+        // Send POST request to the server
+        const response = await fetch('http://localhost:3000/crawl', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                url: linkInput,
+                company_name: companyNameInput
+            })
+        });
+
+        // Handle response
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to extract content');
+        }
+
+        const data = await response.json();
+        const contentInfoDiv = document.getElementById('content-info');
+        contentInfoDiv.innerHTML = `<pre>${data.output}</pre>`; // Display extracted content
+    } catch (error) {
+        console.error('Error extracting content:', error);
+        alert('Error extracting content. Please try again.');
+    }
 });
