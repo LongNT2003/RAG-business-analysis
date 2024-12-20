@@ -94,3 +94,27 @@ document.getElementById('close-chatbot').addEventListener('click', () => {
     window.parent.postMessage({ type: 'closeChatbot' }, '*');
 });
 
+async function getCollections() {
+    try {
+        const response = await fetch('http://localhost:3000/get_collections', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const collections = await response.json();
+        console.log('Available Collections:', collections['collections']);
+        const dropdown = document.getElementById('collection-dropdown');
+        dropdown.innerHTML = collections['collections'].map(col => `<option>${col}</option>`).join('');
+    } catch (error) {
+        console.error('Error fetching collections:', error);
+    }
+}
+document.getElementById('show-collections-button').addEventListener('click', () => {
+    getCollections();
+});

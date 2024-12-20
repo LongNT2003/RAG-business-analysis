@@ -69,7 +69,7 @@ def read_document_json(path: str) -> dict:
         raise ValueError(f"Invalid JSON format in file: {path}")
 
 class VectorDBHandler:
-    def __init__(self, url: str, api_key: str, model_name="hiieu/halong_embedding", collection_name="cmc_final_db"):
+    def __init__(self,url : str, api_key: str, model_name="hiieu/halong_embedding", collection_name="cmc_final_db"):
         """
         Initialize the VectorDBHandler class.
 
@@ -83,7 +83,7 @@ class VectorDBHandler:
         self.api_key = api_key
         self.collection_name = collection_name
         self.embeddings = HuggingFaceEmbeddings(model_name=model_name)
-        self.client = QdrantClient(url=url, api_key=api_key)
+        self.client = QdrantClient(url=self.url, api_key=self.api_key)
         
         # Ensure the collection exists
         self._initialize_collection()
@@ -176,25 +176,29 @@ class VectorDBHandler:
         
         return total_added
     
-    def list_collections(self):
-        """
-        List all collections in the Qdrant instance.
+def list_collections(url , api_key):
+    """
+    List all collections in the Qdrant instance.
 
-        Returns:
-            list: A list of collection names.
-        """
-        collections = self.client.get_collections()
-        print("Available collections:", [col.name for col in collections.collections])
-        return [col.name for col in collections.collections]
+    Returns:
+        list: A list of collection names.
+    """
+    client = QdrantClient(url=url, api_key=api_key)
+    collections = client.get_collections()
+    print("Available collections:", [col.name for col in collections.collections])
+    results=[col.name for col in collections.collections]
+    client.close()
+    return results
 
 if __name__=='__main__':
     from dotenv import load_dotenv
     import os
-    url="https://5d9673e8-d966-4738-adbb-95a5842604ba.europe-west3-0.gcp.cloud.qdrant.io"
+    url='https://5d9673e8-d966-4738-adbb-95a5842604ba.europe-west3-0.gcp.cloud.qdrant.io'
     load_dotenv()
-    qdrant_key = os.getenv('qdrant_key')
-    docs=read_document_json('data/raw/companyA.json')
-    print(docs)
-    splitter=SemanticChunking()
-    chunks=splitter.split_documents(docs)
-    print([ch.metadata for ch in chunks])
+    qdrant_key = os.getenv('qdrant_key_old')
+    print(list_collections(api_key=qdrant_key, url=url))
+    # docs=read_document_json('data/raw/companyA.json')
+    # print(docs)
+    # splitter=SemanticChunking()
+    # chunks=splitter.split_documents(docs)
+    # print([ch.metadata for ch in chunks])

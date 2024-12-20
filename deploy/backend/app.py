@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from rag_pipeline.back import LLMHandler, VectorDatabase, QuestionAnsweringChain
-from rag_pipeline.seed_data import read_document_json, SemanticChunking, VectorDBHandler
+from rag_pipeline.seed_data import read_document_json, SemanticChunking, VectorDBHandler, list_collections
 from dotenv import load_dotenv
 import os
 import logging
@@ -25,8 +25,9 @@ CORS(app)
 # Load environment variables once
 load_dotenv()
 gemini_key = os.getenv('gemini_key')
-qdrant_key = os.getenv('qdrant_key')
-
+qdrant_key = os.getenv('qdrant_key_old')
+url="https://d508995c-b590-4046-a6cb-75dac0ce258d.us-west-2-0.aws.cloud.qdrant.io"
+url='https://5d9673e8-d966-4738-adbb-95a5842604ba.europe-west3-0.gcp.cloud.qdrant.io'
 # Global variables for components
 vector_db = None
 llm_handler = None
@@ -50,7 +51,8 @@ def initialize_components():
         vector_db = VectorDatabase(
             model_name="hiieu/halong_embedding",
             collection_name='cmc_final_db',
-            api=qdrant_key
+            api=qdrant_key,
+            url=url
         )
         logger.info("✅ Vector database initialized")
     
@@ -81,21 +83,22 @@ initialize_components()
 def home():
     return jsonify({"message": "Welcome to the RAG Business Analysis API!"})
 
-@app.route('/favicon.ico')
-def favicon():
-    return '', 204
 @app.route('/save_db', methods=['POST'])
 def save_db():
+    data = request.json
+    collection_name = data.get('company_name')
+    logger.info(f"Saving data to collection name: {collection_name}")
     try:
         # Step 1: Read documents from raw data folder
-        all_docs = read_document_json('data/raw/*.json')
-        splitter = SemanticChunking()
-        vector_db_handler = VectorDBHandler()
-        for docs in all_docs:
-            chunks = splitter.split_documents(docs)
+        docs = read_document_json('data/raw/outputs.json')
 
-            
-            vector_db_handler.add_documents(chunks)
+        # Step 2: Perform semantic chunking
+        splitter = SemanticChunking()
+        chunks = splitter.split_documents(docs)
+        logger.info(f"Successesfully spllit data to chunk!")
+        # Step 3: Initialize VectorDBHandler and insert chunks into database
+        vector_db_handler = VectorDBHandler(url=url,api_key=qdrant_key,collection_name=collection_name)
+        vector_db_handler.add_documents(chunks)
 
         # Return success message
         return jsonify({"message": "Database saved successfully!"}), 200
@@ -104,6 +107,11 @@ def save_db():
         # Return error message if something goes wrong
         return jsonify({"error": str(e)}), 500
 
+@app.route('/get_collections', methods = ['GET'])
+def get_collections():
+    logger.info('get available collections!')
+    collections=list_collections(url=url,api_key=qdrant_key)
+    return jsonify({'collections': collections}), 200
 
 @app.route('/send_message', methods=['POST'])
 def chat():

@@ -67,17 +67,18 @@ class LLMHandler:
         return self.llm
 
 class VectorDatabase:
-    def __init__(self, model_name: str, collection_name: str, api: str):
+    def __init__(self, model_name: str, collection_name: str, api: str, url : str):
         self.embeddings = HuggingFaceEmbeddings(model_name=model_name)
         self.collection_name = collection_name
         self.api = api
+        self.url=url
         self.db = self.load_db()
         
     def load_db(self):
         return QdrantVectorStore.from_existing_collection(
             embedding=self.embeddings,
             collection_name=self.collection_name,
-            url="https://5d9673e8-d966-4738-adbb-95a5842604ba.europe-west3-0.gcp.cloud.qdrant.io",
+            url = self.url,
             api_key=self.api
         )
     def get_retriever(self):
