@@ -26,7 +26,9 @@ CORS(app)
 load_dotenv()
 gemini_key = os.getenv('gemini_key')
 qdrant_key = os.getenv('qdrant_key_old')
+# new url
 url="https://d508995c-b590-4046-a6cb-75dac0ce258d.us-west-2-0.aws.cloud.qdrant.io"
+# old url
 url='https://5d9673e8-d966-4738-adbb-95a5842604ba.europe-west3-0.gcp.cloud.qdrant.io'
 # Global variables for components
 vector_db = None
