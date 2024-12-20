@@ -112,7 +112,7 @@ class VectorDBHandler:
         print(f"Current number of points: {count}")
         return count
 
-    def add_documents(self, chunks: list[Document], max_retries: int = 5, retry_delay: int = 5):
+    def add_documents(self, chunks: list[Document], max_retries: int = 10, retry_delay: int = 5):
         """
         Add new documents to the Qdrant vector database with synchronization check and retry mechanism.
 
@@ -194,6 +194,7 @@ if __name__=='__main__':
     load_dotenv()
     qdrant_key = os.getenv('qdrant_key')
     docs=read_document_json('data/raw/companyA.json')
+    print(docs)
     splitter=SemanticChunking()
     chunks=splitter.split_documents(docs)
     print([ch.metadata for ch in chunks])

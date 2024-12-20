@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from rag_pipeline.back import LLMHandler, VectorDatabase, QuestionAnsweringChain
+from rag_pipeline.seed_data import read_document_json, SemanticChunking, VectorDBHandler
 from dotenv import load_dotenv
 import os
 import logging
@@ -83,6 +84,25 @@ def home():
 @app.route('/favicon.ico')
 def favicon():
     return '', 204
+@app.route('/save_db', methods=['POST'])
+def save_db():
+    try:
+        # Step 1: Read documents from raw data folder
+        all_docs = read_document_json('data/raw/*.json')
+        splitter = SemanticChunking()
+        vector_db_handler = VectorDBHandler()
+        for docs in all_docs:
+            chunks = splitter.split_documents(docs)
+
+            
+            vector_db_handler.add_documents(chunks)
+
+        # Return success message
+        return jsonify({"message": "Database saved successfully!"}), 200
+
+    except Exception as e:
+        # Return error message if something goes wrong
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/send_message', methods=['POST'])

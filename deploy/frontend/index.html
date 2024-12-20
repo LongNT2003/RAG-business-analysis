@@ -8,26 +8,85 @@
     <meta http-equiv="Content-Security-Policy" content="frame-ancestors *">
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-header">
-            <img src="ic_ai.png" alt="AI Icon" class="header-icon">
-            <h2 class="header-title">Jira Assistant</h2>
-            <button id="close-chatbot" class="close-btn">
-                <img src="ic_close.png" alt="Close" class="close-icon">
-            </button>
+    <div class="main-container">
+
+        <!-- Data Processing Container -->
+        <div class="data-processing-container">
+            <h3>Data Processing</h3>
+            <div class="input-section">
+                <input type="text" id="link-input" placeholder="Enter link">
+                <input type="text" id="company-name-input" placeholder="Enter company name">
+                <button id="extract-content-button" class="action-button">Extract Content</button>
+            </div>
+            <div class="content-info" id="content-info">
+                <!-- Extracted content will be displayed here -->
+            </div>
+            <button id="save-to-database-button" class="action-button">Save to Database</button>
         </div>
-        <div class="chat-window" id="chat-window">
-            <!-- Tin nhắn sẽ hiển thị tại đây -->
-        </div>
-        <div class="input-container">
-            <div class="input-box">
-                <textarea id="user-input" placeholder="Type a message..."></textarea>
-                <button id="send-button" class="send-button">
-                    <img src="ic_send.png" alt="Send">
+
+        <!-- Chat Container -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <img src="ic_ai.png" alt="AI Icon" class="header-icon">
+                <h2 class="header-title">AI Assistant</h2>
+                <button id="close-chatbot" class="close-btn">
+                    <img src="ic_close.png" alt="Close" class="close-icon">
                 </button>
             </div>
+            <div class="chat-window" id="chat-window">
+                <!-- Messages will display here -->
+            </div>
+            <div class="input-container">
+                <div class="input-box">
+                    <textarea id="user-input" placeholder="Type a message..."></textarea>
+                    <button id="send-button" class="send-button">
+                        <img src="ic_send.png" alt="Send">
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="collection-selector">
+            <h3>Select Collection</h3>
+            <button id="show-collections-button" class="action-button">Show Collections</button>
+            <select id="collection-dropdown">
+                <!-- Collections will populate here -->
+            </select>
         </div>
     </div>
     <script type="module" src="script.js"></script>
+    <script>
+            // Fetch collections and populate dropdown
+    document.getElementById('show-collections-button').addEventListener('click', () => {
+        const collections = ['Collection 1', 'Collection 2', 'Collection 3']; // Example collections
+        const dropdown = document.getElementById('collection-dropdown');
+        dropdown.innerHTML = collections.map(col => `<option>${col}</option>`).join('');
+    });
+
+    // Extract content from link
+    document.getElementById('extract-content-button').addEventListener('click', async () => {
+        const link = document.getElementById('link-input').value;
+        const companyName = document.getElementById('company-name-input').value;
+
+        if (!link || !companyName) {
+            alert('Please fill in both fields');
+            return;
+        }
+
+        // Simulate content extraction
+        document.getElementById('content-info').innerText = `Extracted content from ${link} for company: ${companyName}`;
+    });
+
+    // Save content to database
+    document.getElementById('save-to-database-button').addEventListener('click', () => {
+        const content = document.getElementById('content-info').innerText;
+        if (!content) {
+            alert('No content to save');
+            return;
+        }
+        alert('Content saved to database!');
+    });
+
+    </script>
 </body>
 </html>
