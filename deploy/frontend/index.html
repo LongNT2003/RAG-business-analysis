@@ -22,6 +22,7 @@
                 <!-- Extracted content will be displayed here -->
             </div>
             <button id="save-to-database-button" class="action-button">Save to Database</button>
+            <div id="save-message" style="display: none;"></div>
         </div>
 
         <!-- Chat Container -->
@@ -55,31 +56,6 @@
         </div>
     </div>
     <script type="module" src="script.js"></script>
-    <script>
-    // Extract content from link
-    // document.getElementById('extract-content-button').addEventListener('click', async () => {
-    //     const link = document.getElementById('link-input').value;
-    //     const companyName = document.getElementById('company-name-input').value;
 
-    //     if (!link || !companyName) {
-    //         alert('Please fill in both fields');
-    //         return;
-    //     }
-
-    //     // Simulate content extraction
-    //     document.getElementById('content-info').innerText = `Extracted content from ${link} for company: ${companyName}`;
-    // });
-
-    // Save content to database
-    document.getElementById('save-to-database-button').addEventListener('click', () => {
-        const content = document.getElementById('content-info').innerText;
-        if (!content) {
-            alert('No content to save');
-            return;
-        }
-        alert('Content saved to database!');
-    });
-
-    </script>
 </body>
 </html>

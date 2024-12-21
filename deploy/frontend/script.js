@@ -140,6 +140,7 @@ async function getCollections() {
 
         const collections = await response.json();
         console.log('Available Collections:', collections['collections']);
+        changeCollection(collections['collections'][0]);
         const dropdown = document.getElementById('collection-dropdown');
         dropdown.innerHTML = collections['collections']
             .map(col => `<option value="${col}">${col}</option>`)
@@ -189,4 +190,51 @@ document.getElementById('extract-content-button').addEventListener('click', asyn
         console.error('Error extracting content:', error);
         alert('Error extracting content. Please try again.');
     }
+});
+
+
+// chunking and save data to db
+document.getElementById('save-to-database-button').addEventListener('click', function() {
+    // Get the company name from the input field
+    const companyName = document.getElementById('company-name-input').value;
+    
+    // Check if the company name is provided
+    if (!companyName) {
+        alert('Please enter a company name.');
+        return;
+    }
+
+    // Prepare the request payload
+    const requestData = {
+        company_name: companyName
+    };
+
+    // Send the POST request to the /save_db route
+    fetch('http://localhost:3000/save_db', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Check if the response has a message and display it
+        const saveMessage = document.getElementById('save-message');
+        if (data.message) {
+            saveMessage.style.color = 'green';
+            saveMessage.innerHTML = data.message;
+        } else if (data.error) {
+            saveMessage.style.color = 'red';
+            saveMessage.innerHTML = `Error: ${data.error}`;
+        }
+        saveMessage.style.display = 'block';
+    })
+    .catch(error => {
+        // Handle network or other errors
+        const saveMessage = document.getElementById('save-message');
+        saveMessage.style.color = 'red';
+        saveMessage.innerHTML = `An error occurred: ${error.message}`;
+        saveMessage.style.display = 'block';
+    });
 });

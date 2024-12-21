@@ -106,7 +106,6 @@ def home():
 
 @app.route('/crawl', methods=['POST'])
 def crawl_from():
-    print('hello')
     try:
         # Parse the request JSON for the URL and company name
         data = request.get_json()
