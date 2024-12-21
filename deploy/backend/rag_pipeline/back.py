@@ -282,10 +282,27 @@ class QuestionAnsweringChain:
         tuple: Phản hồi từ chatbot và các liên kết đã trích xuất.
         """
         self.memory.append(f'người dùng: {question}')
-        response = self.chain.invoke(question)
+        self.extracted_links=[]
+        response = self.llm.invoke(
+            f"""Xác định xem câu hỏi dưới đây có phải là câu chào hỏi thông thường hay câu hỏi yêu cầu truy vấn thông tin. 
+            - Nếu là câu chào hỏi thông thường, trả lời bằng một câu trả lời tự nhiên và thân thiện(chỉ trả về câu chào lại).
+            - Nếu câu hỏi yêu cầu truy vấn thông tin, trả lời là '0' (không phải câu chào hỏi).
 
+            Câu hỏi: {question}"""
+
+        ).content
+        if str(response).strip() == '0':
+            response = self.chain.invoke(question)
+        else:
+            all_responses=list(response.split('\n'))
+            if len(all_responses)>1:
+                final_response=[]
+                for res in all_responses:
+                    if 'chào hỏi' not in res or 'thông thường' not in res:
+                        final_response.append(res)
+                response='\n'.join(final_response)                
         self.memory.append(f'chatbot: {response}')
-        if len(self.memory) > 3:
+        if len(self.memory) > 5:
             self.memory.pop(0)
             self.memory.pop(0)
         return response, self.extracted_links
