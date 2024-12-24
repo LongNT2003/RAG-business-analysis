@@ -4,7 +4,7 @@ from urllib.parse import urljoin, urlparse
 import json
 import google.generativeai as genai
 
-GOOGLE_API_KEY = "AIzaSyBUdd3GPbfUI6d5HFQlhibr-j-edLx6Suk"
+GOOGLE_API_KEY = ""
 genai.configure(api_key=GOOGLE_API_KEY)
 model = genai.GenerativeModel('gemini-1.5-flash')
 
