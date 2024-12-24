@@ -168,7 +168,6 @@ document.getElementById('extract-content-button').addEventListener('click', asyn
     }
     try {
         // Send POST request to the server
-        console.log('hello');
         const response = await fetch('http://localhost:3000/crawl', {
             method: 'POST',
             headers: {
@@ -209,6 +208,35 @@ function displayError(message) {
         errorDiv.textContent = message;  // Update the existing error message
     }
 }
+document.getElementById('verify-content-button').addEventListener('click', async () => {
+    try {
+        // Make a GET request to the /status endpoint
+        const response = await fetch('http://localhost:3000/crawl_status');
+        
+        // Check if the response is OK
+        if (!response.ok) {
+            throw new Error(`Error fetching status: ${response.statusText}`);
+        }
+
+        // Read the response as text
+        const statusText = await response.text();
+
+        // Display the status in the content-info div
+        const contentInfoDiv = document.getElementById('content-info');
+        contentInfoDiv.innerHTML = `
+            <h3>Crawl Status:</h3>
+            <pre>${statusText}</pre>
+        `;
+    } catch (error) {
+        console.error('Error fetching status:', error);
+        const contentInfoDiv = document.getElementById('content-info');
+        contentInfoDiv.innerHTML = `
+            <h3>Error:</h3>
+            <p>Unable to fetch crawl status. Please try again later.</p>
+        `;
+    }
+});
+
 
 
 

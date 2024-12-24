@@ -8,6 +8,7 @@ import os
 import logging
 import sys
 import threading
+import json
 # Set console output encoding to UTF-8 để khi docker compose nó log ra được port 3000
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -142,7 +143,22 @@ def crawl():
         logger.error(f"Error during crawl setup: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+@app.route('/crawl_status', methods=['GET'])
+def check_status():
+    """Endpoint to check the status of the crawling process."""
+    STATUS_FILE = r"data\raw\status.json"
+    if not os.path.exists(STATUS_FILE):
+        return jsonify({"error": "Status file not found. Crawling process has not started."}), 404
 
+    try:
+        # Read the status file
+        with open(STATUS_FILE, "r", encoding="utf-8") as f:
+            status_data = json.load(f)
+        status_text = "\n".join([f"{key}: {value}" for key, value in status_data.items()])
+        
+        return status_text, 200  # Send as plain text
+    except Exception as e:
+        return jsonify({"error": f"Failed to read status file: {str(e)}"}), 500
 @app.route('/save_db', methods=['POST'])
 def save_db():
     data = request.json

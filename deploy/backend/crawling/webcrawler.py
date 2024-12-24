@@ -81,30 +81,63 @@ def fetch_important_text(url, visited, depth=1, base_url=None, output_file="outp
 
     return total_links_crawled + 1, total_characters  # Trả về số link đã crawl và tổng số ký tự
 
-def auto_crawl(start_url,depth = 5,  max_links = 50):
-    # URL khởi đầu
-    
-
-    # Gọi hàm với độ sâu 2
-    visited_urls = set()  # Tập hợp để lưu các URL đã truy cập
+def auto_crawl(start_url, depth=5, max_links=50):
+    # Status file path
+    status_file = r"data\raw\status.json"
     output_file = r"data\raw\outputs.json"
+    visited_urls = set()  # Tập hợp để lưu các URL đã truy cập
 
-    # Xóa nội dung cũ trong file nếu có
-    with open(output_file, "w", encoding="utf-8") as f:
-        f.write("[")  # Bắt đầu file JSON
+    # Initialize the status file
+    status_data = {
+        "status": "initializing",
+        "total_links_crawled": 0,
+        "total_characters_crawled": 0,
+        "current_depth": 0,
+        "max_links": max_links,
+        "error": None
+    }
+    update_status_file(status_file, status_data)
 
-    # Bắt đầu crawl và lấy thông tin số lượng liên kết và số ký tự
-    links_crawled, total_characters = fetch_important_text(start_url, visited_urls, depth=depth, base_url=start_url, output_file=output_file, max_links=max_links)
+    try:
+        # Prepare output file
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write("[")  # Start JSON array
 
-    # Kết thúc file JSON
-    with open(output_file, "a", encoding="utf-8") as f:
-        f.write("\n]")  # Đóng file JSON
+        # Update status: crawling started
+        status_data["status"] = "crawling"
+        update_status_file(status_file, status_data)
 
-    # In ra kết quả
-    print(f"Total links crawled: {links_crawled}")
-    print(f"Total characters crawled: {total_characters}")
-    return links_crawled, total_characters
+        # Perform crawling and fetch data
+        links_crawled, total_characters = fetch_important_text(
+            start_url, visited_urls, depth=depth,
+            base_url=start_url, output_file=output_file, max_links=max_links,
+        )
 
+        # Close JSON array in output file
+        with open(output_file, "a", encoding="utf-8") as f:
+            f.write("\n]")
+
+        # Update status: completed
+        status_data["status"] = "completed"
+        status_data["total_links_crawled"] = links_crawled
+        status_data["total_characters_crawled"] = total_characters
+        update_status_file(status_file, status_data)
+
+        # Return the results
+        print(f"Total links crawled: {links_crawled}")
+        print(f"Total characters crawled: {total_characters}")
+        return links_crawled, total_characters
+
+    except Exception as e:
+        # Update status: error
+        status_data["status"] = "error"
+        status_data["error"] = str(e)
+        update_status_file(status_file, status_data)
+        raise e
+def update_status_file(status_file, status_data):
+    """Helper function to update the status file."""
+    with open(status_file, "w", encoding="utf-8") as f:
+        json.dump(status_data, f, ensure_ascii=False, indent=4)
 if __name__=='__main__':
     start_url = "https://cmcati.vn/"
     auto_crawl(start_url,2,2)
