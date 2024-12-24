@@ -13,7 +13,11 @@ const BACKEND_URL = envConfig.backendUrl;
 function displayMessage(text, sender) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${sender}`;
-    messageDiv.innerText = text;
+    
+    // Sử dụng marked để chuyển đổi markdown thành HTML
+    const formattedText = marked.parse(text);
+    messageDiv.innerHTML = formattedText;
+    
     chatWindow.appendChild(messageDiv);
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }

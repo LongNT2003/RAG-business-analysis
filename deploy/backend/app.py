@@ -101,10 +101,13 @@ def chat():
         logger.info("Processing question...")  # Log before processing
         response, extracted_links = qa_chain.run(question)
         logger.info("Question processed successfully")  # Log successful processing
+        logger.info(f"Response: {response}")
+        logger.info(f"Extracted links: {extracted_links}")
         return jsonify({
             "response": response,
             "links": extracted_links
         })
+        
     except Exception as e:
         logger.error(f"Error processing question: {str(e)}")  # Log the error
         return jsonify({"error": "Internal server error"}), 500
