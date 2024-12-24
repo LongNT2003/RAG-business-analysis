@@ -10,8 +10,8 @@ body {
 }
 
 .chat-container {
-    width: 100%;
-    max-width: 800px;
+    min-width: 50%;
+    max-width: 100%;
     background: #ffffff;
     border-radius: 20px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
@@ -286,6 +286,127 @@ body {
     margin-top: 10px;
     padding-top: 10px;
     border-top: 1px solid #eee;
+}
+
+/* from new */
+/* General Layout */
+.main-container {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    width: 100%;
+    flex-direction: row;
+}
+
+/* Data Processing Container */
+.data-processing-container {
+    flex: 1;
+    margin-right: 20px;
+    padding: 20px;
+    max-width: 25%; /* Adjusted width */
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    background-color: #f9f9f9; /* Background color for container */
+}
+
+
+.data-processing-container h3 {
+    background-color: #e0f7fa; /* Light blue background */
+    padding: 10px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.data-processing-container .input-section {
+    margin-top: 20px;
+    background-color: #f1f8e9; /* Light green background */
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.data-processing-container .input-section input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.data-processing-container .input-section .action-button {
+    background-color: #d1c4e9; /* Light purple background */
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.data-processing-container .input-section .action-button:hover {
+    background-color: #b39ddb; /* Darker purple on hover */
+}
+
+.data-processing-container .content-info {
+    margin-top: 20px;
+    background-color: #ffe0b2; /* Light orange background */
+    padding: 15px;
+    border-radius: 8px;
+    min-height: 100px;
+}
+
+.data-processing-container #save-to-database-button {
+    background-color: #ffccbc; /* Light red background */
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background-color 0.3s;
+}
+
+.data-processing-container #save-to-database-button:hover {
+    background-color: #ffab91; /* Darker red on hover */
+}
+/* Collection Selector */
+.collection-selector {
+    flex: 0.3;
+    margin-bottom: 20px;
+    margin-left: 20px;
+    min-width: 15%; /* Adjusted width */
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    background-color: #f3e5f5; /* Light lavender background */
+}
+.collection-selector h3 {
+    background-color: #d1c4e9; /* Light purple background */
+    padding: 10px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.collection-selector #show-collections-button {
+    background-color: #b3e5fc; /* Light blue background */
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 15px;
+    transition: background-color 0.3s;
+}
+
+.collection-selector #show-collections-button:hover {
+    background-color: #81d4fa; /* Darker blue on hover */
+}
+
+.collection-selector #collection-dropdown {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #ffffff; /* White background for dropdown */
 }
 
 .message-links ul {
