@@ -18,7 +18,7 @@ def is_valid_url(url, base_url):
     parsed_base = urlparse(base_url)
     return parsed_url.netloc == parsed_base.netloc  # Chỉ chấp nhận các link cùng domain
 
-def fetch_important_text(url, visited, depth=1, base_url=None, output_file="output.json", max_links=10):
+def fetch_important_text(url, visited, depth=1, base_url=None, output_file="output.json", max_links=10, status_callback= None):
     """
     Lấy text quan trọng từ một trang web và các liên kết liên quan, lưu vào file JSON.
     Trả về số lượng liên kết đã crawl và tổng số ký tự.
@@ -68,13 +68,15 @@ def fetch_important_text(url, visited, depth=1, base_url=None, output_file="outp
         # Lấy liên kết từ trang web, giới hạn số liên kết
         links = [urljoin(url, a['href']) for a in soup.find_all('a', href=True)]
         links = links[:max_links]  # Giới hạn số lượng liên kết
-
+        if status_callback:
+            status_callback(depth, total_links_crawled, total_characters)
         # Duyệt qua các liên kết
         for link in links:
             if is_valid_url(link, base_url) and link not in visited:  # Chỉ duyệt nếu hợp lệ và chưa được truy cập
                 link_count, char_count = fetch_important_text(link, visited, depth - 1, base_url, output_file, max_links)  # Đệ quy giảm depth
                 total_links_crawled += link_count  # Cộng dồn số liên kết đã crawl
                 total_characters += char_count  # Cộng dồn tổng số ký tự
+                
 
     except Exception as e:
         print(f"Error fetching {url}: {e}")
@@ -111,6 +113,14 @@ def auto_crawl(start_url, depth=5, max_links=50):
         links_crawled, total_characters = fetch_important_text(
             start_url, visited_urls, depth=depth,
             base_url=start_url, output_file=output_file, max_links=max_links,
+            status_callback=lambda current_depth, total_links, total_chars: update_status_file(
+                status_file, {
+                    **status_data,
+                    "current_depth": current_depth,
+                    "total_links_crawled": total_links,
+                    "total_characters_crawled": total_chars
+                }
+            )
         )
 
         # Close JSON array in output file
