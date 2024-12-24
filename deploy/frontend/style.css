@@ -282,3 +282,27 @@ body {
     overflow-y: auto; /* Allow scrolling if needed */
 }
 
+.message-links {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.message-links ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.message-links li {
+    margin: 5px 0;
+}
+
+.message-links a {
+    color: #0366d6;
+    text-decoration: none;
+}
+
+.message-links a:hover {
+    text-decoration: underline;
+}
+

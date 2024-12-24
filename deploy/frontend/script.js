@@ -10,10 +10,33 @@ import { getConfig } from './config.js';
 const envConfig = getConfig();
 const BACKEND_URL = envConfig.backendUrl;
 
-function displayMessage(text, sender) {
+function displayMessage(content, sender) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${sender}`;
-    messageDiv.innerText = text;
+    
+    if (typeof content === 'string') {
+        // Nếu content là string (message từ user hoặc response đơn thuần)
+        messageDiv.innerHTML = marked.parse(content);
+    } else if (typeof content === 'object') {
+        // Nếu content là object có response và links
+        let messageContent = marked.parse(content.response);
+        
+        // Thêm phần links nếu có
+        if (content.links && content.links.length > 0) {
+            messageContent += '<div class="message-links">';
+            messageContent += '<p><strong>Related Links:</strong></p>';
+            messageContent += '<ul>';
+            content.links.forEach(link => {
+                messageContent += `<li><a href="${link}" target="_blank">${link}</a></li>`;
+            });
+            messageContent += '</ul>';
+            messageContent += '</div>';
+        }
+        
+        // sử dụng 
+        messageDiv.innerHTML = messageContent;
+    }
+    
     chatWindow.appendChild(messageDiv);
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
@@ -35,7 +58,11 @@ async function sendMessage(message) {
         });
 
         const data = await response.json();
-        displayMessage(data.response, 'bot');
+        // Gửi cả object chứa response và links
+        displayMessage({
+            response: data.response,
+            links: data.links
+        }, 'bot');
     } catch (error) {
         console.error('Error:', error);
         displayMessage('Xin lỗi, có lỗi xảy ra', 'bot');
