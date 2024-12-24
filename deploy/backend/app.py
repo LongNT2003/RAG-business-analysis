@@ -2,12 +2,12 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from rag_pipeline.back import LLMHandler, VectorDatabase, QuestionAnsweringChain
 from rag_pipeline.seed_data import read_document_json, SemanticChunking, VectorDBHandler, list_collections
-from crawling.crawl import crawl
+from crawling.webcrawler import auto_crawl
 from dotenv import load_dotenv
 import os
 import logging
 import sys
-
+import threading
 # Set console output encoding to UTF-8 để khi docker compose nó log ra được port 3000
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -105,28 +105,41 @@ def home():
     return jsonify({"message": "Welcome to the RAG Business Analysis API!"})
 
 @app.route('/crawl', methods=['POST'])
-def crawl_from():
+def crawl():
     try:
         # Parse the request JSON for the URL and company name
         data = request.get_json()
         if not data or 'url' not in data or 'company_name' not in data:
             return jsonify({"error": "URL and company name are required"}), 400
 
+        max_links = int(data['max_links']) if 'max_links' in data else 10
         url = data['url']
         company_name = data['company_name']
-        
+
         # Log the request for debugging purposes
-        logger.info(f"Crawling from URL: {url} for company: {company_name}")
+        logger.info(f"Crawling initiated for URL: {url}, company: {company_name}, max_links: {max_links}")
 
-        # Call the crawl function (assuming it is defined and returns text)
-        text = crawl(url, company_name)  # Implement your `crawl` function as needed
+        # Immediately respond with 200 OK
+        response_message = {"message": "Crawl request received and processing."}
+        flask_response = jsonify(response_message)
+        flask_response.status_code = 200
 
-        # Return the output text
-        return jsonify({"output": text}), 200
+        # Use threading to perform the crawl in the background
+        def background_crawl():
+            try:
+                total_links, total_chars = auto_crawl(start_url=url, depth=5, max_links=max_links)
+                logger.info(f"Crawling completed. Total links: {total_links}, Total characters: {total_chars}")
+            except Exception as e:
+                logger.error(f"Error during background crawl: {str(e)}")
+
+        # Start background thread
+        threading.Thread(target=background_crawl).start()
+
+        return flask_response
 
     except Exception as e:
         # Log and return error if something goes wrong
-        logger.error(f"Error during crawl: {str(e)}")
+        logger.error(f"Error during crawl setup: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 

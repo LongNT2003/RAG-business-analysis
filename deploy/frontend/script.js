@@ -155,17 +155,20 @@ document.getElementById('show-collections-button').addEventListener('click', () 
 });
 
 document.getElementById('extract-content-button').addEventListener('click', async () => {
+    
     // Get input values
     const linkInput = document.getElementById('link-input').value.trim();
     const companyNameInput = document.getElementById('company-name-input').value.trim();
-
+    const maxLinksInput = parseInt(document.getElementById('max-link-input').value.trim(), 10);
     // Validate inputs
-    if (!linkInput || !companyNameInput) {
-        alert('Please enter both the link and the company name.');
+    if (!linkInput || !companyNameInput || maxLinksInput <= 0) {
+        const errorMessage = 'Please enter valid link, company name, and a positive number for max links!';
+        displayError(errorMessage);
         return;
     }
     try {
         // Send POST request to the server
+        console.log('hello');
         const response = await fetch('http://localhost:3000/crawl', {
             method: 'POST',
             headers: {
@@ -173,7 +176,8 @@ document.getElementById('extract-content-button').addEventListener('click', asyn
             },
             body: JSON.stringify({
                 url: linkInput,
-                company_name: companyNameInput
+                company_name: companyNameInput,
+                max_links: maxLinksInput
             })
         });
 
@@ -185,12 +189,27 @@ document.getElementById('extract-content-button').addEventListener('click', asyn
 
         const data = await response.json();
         const contentInfoDiv = document.getElementById('content-info');
-        contentInfoDiv.innerHTML = `<pre>${data.output}</pre>`; // Display extracted content
+        contentInfoDiv.innerHTML = `<pre>${data['message']}</pre>`; // Display extracted content
     } catch (error) {
         console.error('Error extracting content:', error);
         alert('Error extracting content. Please try again.');
     }
 });
+// Function to display error message on the frontend
+function displayError(message) {
+    const errorDiv = document.getElementById('error-message');
+    if (!errorDiv) {
+        const newErrorDiv = document.createElement('div');
+        newErrorDiv.id = 'error-message';
+        newErrorDiv.style.color = 'red';  // Make error message red
+        newErrorDiv.style.marginTop = '10px';
+        document.body.appendChild(newErrorDiv);
+        newErrorDiv.textContent = message;
+    } else {
+        errorDiv.textContent = message;  // Update the existing error message
+    }
+}
+
 
 
 // chunking and save data to db
