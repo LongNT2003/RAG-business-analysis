@@ -1,3 +1,4 @@
+1. Kiến trúc
 ```python
 def run(self, question):
 # 1. Query Vector DB (3-5s)
@@ -15,3 +16,6 @@ response = self.chain.invoke(question)
 ```
 ------
 tốc độ phản hồi bot đang khoảng bao nhiêu đó Long, tôi run thử thì 10-20 s.
+
+
+2. Cách run thì xem tại: HowToRun.md
